@@ -1,4 +1,4 @@
-# GlassShop - Full Stack Web Application
+# GlassShopDev - Full Stack Web Application
 
 ## 🏗️ Project Overview
 
@@ -14,8 +14,7 @@ A modern full-stack web application built with Django REST Framework and React.j
 
 ### Environments
 - **Development**: Windows EC2 (local development)
-- **Test**: test.glassshop.com (Ubuntu EC2)
-- **Production**: glassshop.com (Ubuntu EC2)
+- **Live**: glassshopdev.com (Ubuntu EC2)
 
 ## 📋 Project Status
 
@@ -34,8 +33,8 @@ For detailed progress tracking, see [PROGRESS.md](./docs/PROGRESS.md)
 
 2. **Clone Repository**
    ```bash
-   git clone https://github.com/yourusername/glassshop.git
-   cd glassshop
+   git clone https://github.com/Avinash-jetwani/GlassshopWebApp.git
+   cd GlassshopDev
    ```
 
 3. **Follow Setup Guide**
@@ -44,7 +43,7 @@ For detailed progress tracking, see [PROGRESS.md](./docs/PROGRESS.md)
 ## 📂 Project Structure
 
 ```
-glassshop/
+GlassshopDev/
 ├── backend/           # Django REST API
 ├── frontend/          # React.js application
 ├── docs/              # Documentation
@@ -83,4 +82,4 @@ See [CONTRIBUTING.md](./docs/CONTRIBUTING.md) for guidelines.
 
 ---
 
-Last Updated: December 2024 
+Last Updated: December 2024
