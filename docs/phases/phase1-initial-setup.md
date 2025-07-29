@@ -72,16 +72,20 @@ node --version
 npm --version
 ```
 
-#### 2.4 Install PostgreSQL 16
+#### 2.4 Install PostgreSQL Client Tools
 ```bash
 # Download from: https://www.postgresql.org/download/windows/
-# During installation:
-# - Set password for postgres user (remember this!)
-# - Default port: 5432
-# - Default locale
+# We only need CLIENT TOOLS since we're using AWS RDS
+# During installation, select ONLY:
+# - Command Line Tools (psql, createdb, etc.)
+# - pgAdmin 4 (database management tool)
+# - Do NOT install PostgreSQL Server (we're using AWS RDS)
 
-# Verify by opening pgAdmin 4
+# Verify client tools installation:
+psql --version
 ```
+
+**Note**: Since we're using AWS RDS, we don't need to install the PostgreSQL server locally. We only need the client tools to connect to our RDS instances.
 
 ### Step 3: Create GitHub Repository
 
@@ -100,39 +104,102 @@ git branch -M main
 git push -u origin main
 ```
 
-### Step 4: Database Setup
+### Step 4: AWS RDS PostgreSQL Database Setup
 
-1. **Open pgAdmin 4**
+#### 4.1 Create AWS RDS PostgreSQL Instances
 
-2. **Connect to PostgreSQL server**:
-   - Right-click "Servers" → Create → Server
-   - Name: "Local PostgreSQL"
-   - Connection tab:
-     - Host: localhost
+**Prerequisites:**
+- AWS Account with appropriate permissions
+- AWS CLI installed (optional but recommended)
+
+#### 4.2 Create Development Database (RDS Instance)
+
+1. **Login to AWS Console** → Navigate to **RDS**
+
+2. **Create Database**:
+   - Click "Create database"
+   - **Engine**: PostgreSQL
+   - **Template**: Dev/Test (for development)
+   - **Engine Version**: 16.x (latest stable)
+
+3. **Settings**:
+   - **DB Instance Identifier**: `glassshop-dev-db`
+   - **Master Username**: `postgres`
+   - **Master Password**: Choose a strong password (save it!)
+
+4. **Instance Configuration**:
+   - **DB Instance Class**: `db.t3.micro` (free tier eligible)
+   - **Storage Type**: General Purpose (SSD)
+   - **Allocated Storage**: 20 GB
+
+5. **Connectivity**:
+   - **Public Access**: Yes (for development)
+   - **VPC Security Group**: Create new or use existing
+   - **Database Port**: 5432
+
+6. **Additional Configuration**:
+   - **Initial Database Name**: `glassshop_dev`
+   - **Backup Retention**: 7 days
+   - **Monitoring**: Enable Enhanced Monitoring
+
+#### 4.3 Create Live/Production Database (RDS Instance)
+
+1. **Repeat the process** for production database:
+   - **DB Instance Identifier**: `glassshop-live-db`
+   - **Template**: Production
+   - **Instance Class**: `db.t3.small` or higher
+   - **Multi-AZ**: Yes (for high availability)
+   - **Initial Database Name**: `glassshop_live`
+   - **Public Access**: No (access via VPC only)
+
+#### 4.4 Configure Security Groups
+
+1. **Create Security Group** for database access:
+   - **Name**: `glassshop-db-sg`
+   - **Inbound Rules**:
+     - Type: PostgreSQL
      - Port: 5432
-     - Username: postgres
-     - Password: (your password)
+     - Source: Your IP / VPC CIDR
 
-3. **Create databases using SQL**:
+#### 4.5 Connect and Setup Database Users
+
+1. **Get RDS Endpoints** from AWS Console:
+   - Development: `glassshop-dev-db.xxxxx.region.rds.amazonaws.com`
+   - Live: `glassshop-live-db.xxxxx.region.rds.amazonaws.com`
+
+2. **Connect using psql or pgAdmin**:
+```bash
+psql -h glassshop-dev-db.xxxxx.region.rds.amazonaws.com -U postgres -d glassshop_dev
+```
+
+3. **Create application users**:
 ```sql
--- Create development database
-CREATE DATABASE glassshop_dev;
+-- Create application user for development
+CREATE USER glassshop_dev_user WITH PASSWORD 'SecureDevPassword123!';
+GRANT ALL PRIVILEGES ON DATABASE glassshop_dev TO glassshop_dev_user;
+GRANT ALL PRIVILEGES ON SCHEMA public TO glassshop_dev_user;
 
--- Create live/production database
-CREATE DATABASE glassshop_live;
+-- Create application user for live
+-- (Connect to live database)
+CREATE USER glassshop_live_user WITH PASSWORD 'SecureLivePassword123!';
+GRANT ALL PRIVILEGES ON DATABASE glassshop_live TO glassshop_live_user;
+GRANT ALL PRIVILEGES ON SCHEMA public TO glassshop_live_user;
 
--- Create application user
-CREATE USER glassshop_user WITH PASSWORD 'SecurePassword123!';
-
--- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE glassshop_dev TO glassshop_user;
-GRANT ALL PRIVILEGES ON DATABASE glassshop_live TO glassshop_user;
-
--- Create super admin user
-CREATE USER glassshop_admin WITH PASSWORD 'AdminPassword123!' SUPERUSER;
-
--- Verify databases
+-- Verify connection
 \l
+\du
+```
+
+#### 4.6 Test Connections
+
+**Development Database Test**:
+```bash
+psql -h your-dev-endpoint -U glassshop_dev_user -d glassshop_dev
+```
+
+**Live Database Test**:
+```bash
+psql -h your-live-endpoint -U glassshop_live_user -d glassshop_live
 ```
 
 ### Step 5: Environment Variables Setup
@@ -150,16 +217,26 @@ SECRET_KEY=django-insecure-generate-a-new-secret-key-here
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
-# Database Configuration
+# AWS RDS Development Database Configuration
 DB_ENGINE=django.db.backends.postgresql
 DB_NAME=glassshop_dev
-DB_USER=glassshop_user
-DB_PASSWORD=SecurePassword123!
-DB_HOST=localhost
+DB_USER=glassshop_dev_user
+DB_PASSWORD=SecureDevPassword123!
+DB_HOST=glassshop-dev-db.xxxxx.region.rds.amazonaws.com
 DB_PORT=5432
 
-# Live Database
+# AWS RDS Live Database Configuration
 LIVE_DB_NAME=glassshop_live
+LIVE_DB_USER=glassshop_live_user
+LIVE_DB_PASSWORD=SecureLivePassword123!
+LIVE_DB_HOST=glassshop-live-db.xxxxx.region.rds.amazonaws.com
+LIVE_DB_PORT=5432
+
+# AWS Configuration
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_DEFAULT_REGION=us-east-1
+AWS_S3_REGION_NAME=us-east-1
 
 # Redis Configuration (if using Redis)
 REDIS_URL=redis://localhost:6379/0

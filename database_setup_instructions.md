@@ -1,48 +1,53 @@
-# 🚀 Complete Database Setup Instructions
+# 🚀 Complete Database Setup Instructions (DBeaver)
 
-## 📋 **Steps to Complete (Run in pgAdmin)**
+## 📋 **Steps to Complete (Run in DBeaver)**
 
-### **Step 1: Open pgAdmin 4**
-1. Open pgAdmin 4 on your Windows machine
-2. Add both database servers
+### **Step 1: Fix PostgreSQL Driver (If Needed)**
+1. If you see "PostgreSQL driver files are missing":
+   - Click **"Download"** in the driver settings popup
+   - Wait for download to complete
+   - If download fails, go to **Database** → **Driver Manager** → **PostgreSQL** → **Download/Update**
 
-### **Step 2: Add Development Server**
-1. Right-click "Servers" → "Create" → "Server"
-2. **General Tab**:
-   - Name: `GlassShop Dev Database`
-3. **Connection Tab**:
-   - Host: `glassshop-dev-db.cjqiqwsc2ul5.eu-west-2.rds.amazonaws.com`
-   - Port: `5432`
-   - Database: `glassshop_dev`
-   - Username: `postgres`
-   - Password: `AeGlazingTest!2025`
-4. Click "Save"
+### **Step 2: Add Development Database Connection**
+1. Open DBeaver
+2. Click **"New Database Connection"** (plug icon) or **Ctrl+Shift+O**
+3. Select **PostgreSQL** → **Next**
+4. **Connection Settings**:
+   - **Server Host**: `glassshop-dev-db.cjqiqwsc2ul5.eu-west-2.rds.amazonaws.com`
+   - **Port**: `5432`
+   - **Database**: `glassshop_dev`
+   - **Username**: `postgres`
+   - **Password**: `AeGlazingTest!2025`
+   - **Connection Name**: `GlassShop Dev Database`
+5. Click **"Test Connection"** to verify
+6. Click **"Finish"**
 
-### **Step 3: Add Live Server**
-1. Right-click "Servers" → "Create" → "Server"
-2. **General Tab**:
-   - Name: `GlassShop Live Database`
-3. **Connection Tab**:
-   - Host: `glassshop-live-db.cjqiqwsc2ul5.eu-west-2.rds.amazonaws.com`
-   - Port: `5432`
-   - Database: `glassshop_live`
-   - Username: `postgres`
-   - Password: `AeGlazingLive!2025`
-4. Click "Save"
+### **Step 3: Add Live Database Connection**
+1. Click **"New Database Connection"** again
+2. Select **PostgreSQL** → **Next**
+3. **Connection Settings**:
+   - **Server Host**: `glassshop-live-db.cjqiqwsc2ul5.eu-west-2.rds.amazonaws.com`
+   - **Port**: `5432`
+   - **Database**: `glassshop_live`
+   - **Username**: `postgres`
+   - **Password**: `AeGlazingLive!2025`
+   - **Connection Name**: `GlassShop Live Database`
+4. Click **"Test Connection"** to verify
+5. Click **"Finish"**
 
 ### **Step 4: Run Development Database Setup**
-1. Connect to "GlassShop Dev Database"
-2. Right-click on `glassshop_dev` database → "Query Tool"
-3. Copy and paste the entire content from `setup_dev_database.sql`
-4. Execute the script (F5 or play button)
-5. Verify you see "Development database setup completed successfully!"
+1. **Connect** to "GlassShop Dev Database" (double-click)
+2. Right-click on the connection → **"SQL Editor"** → **"Open SQL Script"**
+3. **Copy and paste** the entire content from `setup_dev_database.sql`
+4. **Execute the script** (Ctrl+Enter or Execute button)
+5. Verify you see **"Development database setup completed successfully!"**
 
 ### **Step 5: Run Live Database Setup**
-1. Connect to "GlassShop Live Database"
-2. Right-click on `glassshop_live` database → "Query Tool"
-3. Copy and paste the entire content from `setup_live_database.sql`
-4. Execute the script (F5 or play button)
-5. Verify you see "Live database setup completed successfully!"
+1. **Connect** to "GlassShop Live Database" (double-click)
+2. Right-click on the connection → **"SQL Editor"** → **"Open SQL Script"**
+3. **Copy and paste** the entire content from `setup_live_database.sql`
+4. **Execute the script** (Ctrl+Enter or Execute button)
+5. Verify you see **"Live database setup completed successfully!"**
 
 ---
 
@@ -131,10 +136,12 @@ Once all checklist items are complete:
 - Verify user was created with \du command
 - Check you're connected to correct database
 
-### **pgAdmin Issues:**
-- Try refreshing the connection
-- Disconnect and reconnect
-- Check password is correct
+### **DBeaver Issues:**
+- **Driver problems**: Go to Database → Driver Manager → PostgreSQL → Download/Update
+- **Connection timeout**: Check security group allows your IP (13.43.23.91/32)
+- **Authentication failed**: Verify username/password are correct
+- **Can't find server**: Double-check the endpoint spelling
+- **SSL issues**: In connection settings, go to SSL tab → set SSL mode to "require"
 
 ---
 

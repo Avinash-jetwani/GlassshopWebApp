@@ -23,7 +23,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO glassshop_dev_u
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO glassshop_dev_user;
 
 -- 4. Verify user creation
-\du
+SELECT usename, usesuper, usecreatedb FROM pg_user WHERE usename = 'glassshop_dev_user';
 
 -- 5. Test basic operations
 SELECT version();
