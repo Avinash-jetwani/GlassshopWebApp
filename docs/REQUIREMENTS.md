@@ -28,7 +28,7 @@ djangorestframework==3.14.0
 django-cors-headers==4.3.1
 django-environ==0.11.2
 djangorestframework-simplejwt==5.3.1
-psycopg2-binary==2.9.9
+psycopg2==2.9.10
 redis==5.0.1
 django-redis==5.4.0
 gunicorn==21.2.0
@@ -37,7 +37,7 @@ celery==5.3.4
 django-celery-beat==2.5.0
 django-filter==23.5
 drf-spectacular==0.27.1
-pillow==10.2.0
+pillow==10.4.0
 django-storages==1.14.2
 boto3==1.34.25
 ```
