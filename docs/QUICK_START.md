@@ -2,13 +2,21 @@
 
 ## 🚀 For Experienced Developers
 
-If you're already familiar with Django and React, here's the fast track:
+If you're already familiar with Django and React, here's the current project status and next steps:
+
+**📊 Current Status: Phase 1 Complete ✅**
+- Development environment setup complete
+- AWS RDS databases configured
+- Cursor IDE with Claude 3.5 Sonnet ready
+- Ready to start Phase 2 (Django backend)
 
 ### 1. Clone and Setup
 ```bash
-git clone https://github.com/yourusername/glassshop.git
-cd glassshop
+git clone https://github.com/Avinash-jetwani/GlassshopWebApp.git
+cd GlassshopDev
 ```
+
+**✅ STATUS**: Already completed - repository is set up and connected.
 
 ### 2. Backend Setup
 ```bash
