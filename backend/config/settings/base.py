@@ -41,9 +41,9 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    'apps.core',
-    'apps.authentication',
-    'apps.api',
+    'apps.core.apps.CoreConfig',
+    'apps.authentication.apps.AuthenticationConfig',
+    'apps.api.apps.ApiConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
