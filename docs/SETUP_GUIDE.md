@@ -299,8 +299,7 @@ npm install
 
 ```bash
 # Essential packages
-npm install axios react-router-dom zustand
-npm install @tanstack/react-query
+npm install react-router-dom @reduxjs/toolkit react-redux
 npm install react-hook-form zod
 npm install date-fns
 

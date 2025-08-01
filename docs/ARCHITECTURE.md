@@ -57,9 +57,8 @@ GlassShop follows a modern microservices-inspired architecture with clear separa
 - **React 18**: UI library
 - **Vite**: Build tool and dev server
 - **React Router v6**: Client-side routing
-- **Zustand**: State management
-- **React Query**: Server state management
-- **Axios**: HTTP client
+- **Redux Toolkit**: State management
+- **RTK Query**: Server state management & caching
 - **Tailwind CSS**: Styling
 
 #### Folder Structure
@@ -71,13 +70,11 @@ frontend/
 │   │   ├── layout/       # Header, Footer, Sidebar
 │   │   └── features/     # Feature-specific components
 │   ├── pages/            # Route components
-│   ├── services/         # API service layer
-│   │   ├── api.js       # Axios instance
-│   │   ├── auth.js      # Authentication services
-│   │   └── users.js     # User-related APIs
 │   ├── hooks/           # Custom React hooks
 │   ├── utils/           # Helper functions
-│   ├── stores/          # Zustand stores
+│   ├── store/           # Redux store
+│   │   ├── index.ts     # Store configuration
+│   │   └── slices/      # Redux slices & RTK Query APIs
 │   └── styles/          # Global styles
 ```
 
