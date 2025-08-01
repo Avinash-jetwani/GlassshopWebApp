@@ -49,9 +49,8 @@ boto3==1.34.25
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.1",
-    "axios": "^1.6.5",
-    "zustand": "^4.4.7",
-    "@tanstack/react-query": "^5.17.9",
+    "@reduxjs/toolkit": "^2.0.1",
+    "react-redux": "^9.0.4",
     "react-hook-form": "^7.48.2",
     "zod": "^3.22.4",
     "date-fns": "^3.2.0"

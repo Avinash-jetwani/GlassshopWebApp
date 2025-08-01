@@ -39,9 +39,8 @@
 - React 18+ application with Vite build tool
 - Tailwind CSS styling framework with responsive design
 - React Router DOM for client-side routing
-- Axios HTTP client for API communication
-- Zustand for lightweight state management
-- TanStack React Query for server state management
+- Redux Toolkit for predictable state management
+- RTK Query for server state management and caching (replaces Axios + React Query)
 - React Hook Form + Zod for form handling and validation
 - TypeScript for type safety
 - ESLint + Prettier for code quality
@@ -79,10 +78,10 @@
 ### **Navigation & Routing:**
 - **React Router DOM**: 6.21.1+ (Client-side routing)
 
-### **HTTP & State Management:**
-- **Axios**: 1.6.5+ (HTTP client)
-- **Zustand**: 4.4.7+ (Application state management)
-- **TanStack React Query**: 5.17.9+ (Server state management)
+### **State Management:**
+- **Redux Toolkit**: 2.0.1+ (Application state management)
+- **React Redux**: 9.0.4+ (React bindings for Redux)
+- **RTK Query**: Built into Redux Toolkit (Server state management & caching)
 
 ### **Forms & Validation:**
 - **React Hook Form**: 7.48.2+ (Form handling)
@@ -215,11 +214,11 @@ npm run dev
 
 #### **2.1 Install Core Dependencies**
 ```bash
-# HTTP client and routing
-npm install axios@^1.6.5 react-router-dom@^6.21.1
+# Routing
+npm install react-router-dom@^6.21.1
 
 # State management
-npm install zustand@^4.4.7 @tanstack/react-query@^5.17.9
+npm install @reduxjs/toolkit@^2.0.1 react-redux@^9.0.4
 
 # Forms and validation
 npm install react-hook-form@^7.48.2 zod@^3.22.4
@@ -560,26 +559,18 @@ export const NotFoundPage: React.FC = () => {
 ```typescript
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
+import { store } from './store';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { HomePage } from './pages/Home';
 import { NotFoundPage } from './pages/NotFound';
 import './styles/globals.css';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 30, // 30 minutes
-    },
-  },
-});
-
 function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
         <Router>
           <Layout>
             <Routes>
@@ -588,7 +579,7 @@ function App() {
             </Routes>
           </Layout>
         </Router>
-      </QueryClientProvider>
+      </Provider>
     </ErrorBoundary>
   );
 }
@@ -621,147 +612,29 @@ VITE_DEBUG=true
 VITE_LOG_LEVEL=debug
 ```
 
-#### **7.2 Configure Axios**
+#### **7.2 Create Redux Typed Hooks**
 
-**`src/services/api.ts`:**
+**`src/hooks/redux.ts`:**
 ```typescript
-import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import type { TypedUseSelectorHook } from 'react-redux';
+import type { RootState, AppDispatch } from '../store';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1';
-const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '10000');
-
-export const api = axios.create({
-  baseURL: API_URL,
-  timeout: API_TIMEOUT,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    // Add auth token when available
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor
-api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    // Handle common errors
-    if (error.response?.status === 401) {
-      // Handle unauthorized
-      localStorage.removeItem('access_token');
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default api;
+// Use throughout your app instead of plain `useDispatch` and `useSelector`
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 ```
 
-**`src/services/endpoints.ts`:**
-```typescript
-export const API_ENDPOINTS = {
-  // Health check
-  HEALTH: '/health/',
-  
-  // Authentication (infrastructure only)
-  AUTH: {
-    TOKEN: '/auth/token/',
-    REFRESH: '/auth/token/refresh/',
-    VERIFY: '/auth/token/verify/',
-  },
-} as const;
-```
-
-#### **7.3 Create API Hooks**
-
-**`src/hooks/useApi.ts`:**
-```typescript
-import { useState, useEffect } from 'react';
-import { api } from '../services/api';
-import { AxiosError } from 'axios';
-
-interface ApiState<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-}
-
-export function useApi<T>(url: string, immediate = true) {
-  const [state, setState] = useState<ApiState<T>>({
-    data: null,
-    loading: false,
-    error: null,
-  });
-
-  const execute = async () => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
-    try {
-      const response = await api.get<T>(url);
-      setState({
-        data: response.data,
-        loading: false,
-        error: null,
-      });
-      return response.data;
-    } catch (error) {
-      const errorMessage = error instanceof AxiosError 
-        ? error.response?.data?.message || error.message
-        : 'An unknown error occurred';
-      
-      setState({
-        data: null,
-        loading: false,
-        error: errorMessage,
-      });
-      throw error;
-    }
-  };
-
-  useEffect(() => {
-    if (immediate) {
-      execute();
-    }
-  }, [url, immediate]);
-
-  return { ...state, execute };
-}
-```
-
-#### **7.4 Test API Connection**
+#### **7.3 Test API Connection**
 
 **Update `src/pages/Home.tsx` to include API test:**
 ```typescript
 import React from 'react';
-import { useApi } from '../hooks/useApi';
+import { useGetHealthQuery } from '../store/slices/apiSlice';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import { API_ENDPOINTS } from '../services/endpoints';
-
-interface HealthResponse {
-  status: string;
-  message: string;
-  database: string;
-  version: string;
-}
 
 export const HomePage: React.FC = () => {
-  const { data: health, loading, error } = useApi<HealthResponse>(
-    API_ENDPOINTS.HEALTH
-  );
+  const { data: health, isLoading, error } = useGetHealthQuery();
 
   return (
     <div className="text-center">
@@ -775,14 +648,16 @@ export const HomePage: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4">System Status</h2>
         
-        {loading && (
+        {isLoading && (
           <div className="flex justify-center mb-4">
             <LoadingSpinner />
           </div>
         )}
         
         {error && (
-          <p className="text-red-600 mb-4">❌ Backend: {error}</p>
+          <p className="text-red-600 mb-4">
+            ❌ Backend: {error?.data?.message || 'Connection failed'}
+          </p>
         )}
         
         {health && (
@@ -809,51 +684,109 @@ export const HomePage: React.FC = () => {
 ### **Step 8: Setup State Management**
 **Batch 8: Application State**
 
-#### **8.1 Configure Zustand Store**
+#### **8.1 Configure Redux Store**
 
 **`src/store/index.ts`:**
 ```typescript
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
+import { apiSlice } from './slices/apiSlice';
+import appSlice from './slices/appSlice';
+
+export const store = configureStore({
+  reducer: {
+    app: appSlice,
+    api: apiSlice.reducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(apiSlice.middleware),
+  devTools: process.env.NODE_ENV !== 'production',
+});
+
+// Enable refetchOnFocus/refetchOnReconnect behaviors
+setupListeners(store.dispatch);
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+```
+
+**`src/store/slices/appSlice.ts`:**
+```typescript
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AppState {
-  // Global app state
   isLoading: boolean;
   error: string | null;
-  
-  // UI state
   sidebarOpen: boolean;
   theme: 'light' | 'dark';
-  
-  // Actions
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  toggleSidebar: () => void;
-  setTheme: (theme: 'light' | 'dark') => void;
-  clearError: () => void;
 }
 
-export const useAppStore = create<AppState>()(
-  devtools(
-    (set) => ({
-      // Initial state
-      isLoading: false,
-      error: null,
-      sidebarOpen: false,
-      theme: 'light',
-      
-      // Actions
-      setLoading: (loading) => set({ isLoading: loading }),
-      setError: (error) => set({ error }),
-      toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-      setTheme: (theme) => set({ theme }),
-      clearError: () => set({ error: null }),
+const initialState: AppState = {
+  isLoading: false,
+  error: null,
+  sidebarOpen: false,
+  theme: 'light',
+};
+
+const appSlice = createSlice({
+  name: 'app',
+  initialState,
+  reducers: {
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
+    toggleSidebar: (state) => {
+      state.sidebarOpen = !state.sidebarOpen;
+    },
+    setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
+      state.theme = action.payload;
+    },
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
+});
+
+export const { setLoading, setError, toggleSidebar, setTheme, clearError } = appSlice.actions;
+export default appSlice.reducer;
+```
+
+**`src/store/slices/apiSlice.ts`:**
+```typescript
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1';
+
+export const apiSlice = createApi({
+  reducerPath: 'api',
+  baseQuery: fetchBaseQuery({
+    baseUrl: API_URL,
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
+  tagTypes: ['Health'],
+  endpoints: (builder) => ({
+    getHealth: builder.query<{
+      status: string;
+      message: string;
+      database: string;
+      version: string;
+    }, void>({
+      query: () => '/health/',
+      providesTags: ['Health'],
     }),
-    {
-      name: 'app-store',
-    }
-  )
-);
+  }),
+});
+
+export const { useGetHealthQuery } = apiSlice;
 ```
 
 #### **8.2 Create Utility Types**
@@ -916,7 +849,7 @@ export const LOCAL_STORAGE_KEYS = {
 } as const;
 ```
 
-**Expected Output**: Functional state management system
+**Expected Output**: Functional Redux state management with RTK Query API integration
 
 ---
 
